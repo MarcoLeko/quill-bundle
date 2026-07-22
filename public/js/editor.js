@@ -269,12 +269,12 @@ pimcore.bundle.quill.editor = Class.create({
         tooltip.boundsContainer = tooltip.quill.container;
 
         tooltip.save = () => {
-            const range = this.activeEditor.getSelection(true);
+            const range = this.quill.getSelection(true);
             const url = textbox.value.trim();
             const isValidUrl = urlRegex.test(url);
 
             if (isValidUrl) {
-                this.activeEditor.insertEmbed(range.index, 'image', url, Quill.sources.USER);
+                this.quill.insertEmbed(range.index, 'image', url, Quill.sources.USER);
             } else {
                 console.error('Invalid URL for image embed');
             }
