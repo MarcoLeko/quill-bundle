@@ -251,9 +251,9 @@ pimcore.bundle.quill.editor = Class.create({
 
                     uri = Routing.generate(route, params);
 
-                    if (data.imageWidth < defaultWidth
-                      && in_arrayi(pimcore.helpers.getFileExtension(data.text),
-                        browserPossibleExtensions)) {
+                    if (data.imageWidth < defaultWidth &&
+                        browserPossibleExtensions.includes(pimcore.helpers.getFileExtension(data.text))
+                    ) {
                         uri = data.path;
                         additionalAttributes.pimcore_disable_thumbnail = true;
                     }
@@ -284,7 +284,7 @@ pimcore.bundle.quill.editor = Class.create({
         if (leaf && leaf.parent.domNode.nodeName === 'A') {
             leaf.parent.domNode.setAttribute('pimcore_id', id);
             if (data.elementType === "document" && (data.type === "page"
-              || data.type === "hardlink" || data.type === "link")) {
+                || data.type === "hardlink" || data.type === "link")) {
                 leaf.parent.domNode.setAttribute('pimcore_type', 'document');
                 return true;
             }
