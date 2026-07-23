@@ -1,12 +1,12 @@
 /**
-* This source file is available under the terms of the
-* Pimcore Open Core License (POCL)
-* Full copyright and license information is available in
-* LICENSE.md which is distributed with this source code.
-*
-*  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.com)
-*  @license    Pimcore Open Core License (POCL)
-*/
+ * This source file is available under the terms of the
+ * Pimcore Open Core License (POCL)
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ *  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.com)
+ *  @license    Pimcore Open Core License (POCL)
+ */
 
 pimcore.registerNS("pimcore.bundle.quill.editor");
 pimcore.bundle.quill.editor = Class.create({
@@ -385,7 +385,15 @@ pimcore.bundle.quill.editor = Class.create({
             modules.clipboard = {
                 matchers: [
                     ['IMG', (node, delta) => {
-                        return delta.compose(new Delta().retain(delta.length(), node.style ?? {}));
+                        const styles = {};
+
+                        for (const prop of node.style) {
+                            styles[prop] = node.style.getPropertyValue(prop);
+                        }
+
+                        return delta.compose(
+                            new Delta().retain(delta.length(), styles)
+                        );
                     }]
                 ]
             };
@@ -460,19 +468,19 @@ pimcore.bundle.quill.editor = Class.create({
         rootNode.appendChild(this.modalBackground);
 
         document.addEventListener('click', (event) => {
-              if (event.target === this.modalBackground) {
-                  this.modalBackground.style.display = "none";
-              }
+            if (event.target === this.modalBackground) {
+                this.modalBackground.style.display = "none";
+            }
         });
 
         contentNode.appendChild(
-          this.createActionButtons(
-            this.modalBackground,
-            () => {
-                const html = this.modalBackground.getElementsByTagName('textarea')[0].value;
-                this.setEditorContent(html);
-            }
-          )
+            this.createActionButtons(
+                this.modalBackground,
+                () => {
+                    const html = this.modalBackground.getElementsByTagName('textarea')[0].value;
+                    this.setEditorContent(html);
+                }
+            )
         );
 
         return this.modalBackground;
