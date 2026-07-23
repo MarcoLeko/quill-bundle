@@ -380,6 +380,8 @@ pimcore.bundle.quill.editor = Class.create({
         }
 
         if (!modules.hasOwnProperty('clipboard')) {
+            const Delta = Quill.import('delta');
+
             modules.clipboard = {
                 matchers: [
                     ['IMG', (node, delta) => {
