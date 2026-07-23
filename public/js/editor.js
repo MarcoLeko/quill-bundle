@@ -80,6 +80,47 @@ pimcore.bundle.quill.editor = Class.create({
         });
         Quill.register(inlineCssAttributor, true);
 
+        const ImageBlot = Quill.import('formats/image');
+
+        class StyledImageBlot extends ImageBlot {
+            static create(value) {
+                const node = super.create(value);
+
+                if (value && typeof value === 'object') {
+                    for (const [key, val] of Object.entries(value)) {
+                        node.style.setProperty(key, val);
+                    }
+                }
+
+                return node;
+            }
+
+            static formats(node) {
+                const formats = super.formats(node);
+
+                for (const prop of node.style) {
+                    formats[prop] = node.style.getPropertyValue(prop);
+                }
+
+                return formats;
+            }
+
+            format(name, value) {
+                if (name === this.statics.blotName || name === 'alt') {
+                    super.format(name, value);
+                    return;
+                }
+
+                if (value == null || value === false) {
+                    this.domNode.style.removeProperty(name);
+                } else {
+                    this.domNode.style.setProperty(name, value);
+                }
+            }
+        }
+
+        Quill.register(StyledImageBlot, true);
+
         this.createHtmlEditModal();
     },
 
@@ -95,7 +136,7 @@ pimcore.bundle.quill.editor = Class.create({
         }
 
         let defaultConfig = {};
-        if('' !== subSpace && pimcore[e.detail.context][subSpace]) {
+        if (subSpace && pimcore[e.detail.context][subSpace]) {
             defaultConfig = pimcore[e.detail.context][subSpace].wysiwyg ? pimcore[e.detail.context][subSpace].wysiwyg.defaultEditorConfig : {};
         }
 
@@ -295,6 +336,21 @@ pimcore.bundle.quill.editor = Class.create({
             modules.table = false;
         }
 
+        modules.toolbar = {
+            container: [
+                ['redo', 'undo'],
+                [{ header: [1, 2, 3, 4, 5, 6, false] }],
+                ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+                ['link', 'image'],
+                [{ list: 'ordered'}, { list: 'bullet' }, { list: 'check' }],
+                ['table-better'],
+                ['clean', 'html-edit'],
+            ],
+            handlers: {
+                image: this.imageHandler
+            }
+        };
+
         if (!modules.hasOwnProperty('table-better')) {
             modules['table-better'] = {
                 language: 'en_US',
@@ -315,30 +371,6 @@ pimcore.bundle.quill.editor = Class.create({
             };
         }
 
-        if (!modules.hasOwnProperty('toolbar')) {
-            modules.toolbar = {
-                container: [
-                    ['redo', 'undo'],
-                    [{ header: [1, 2, 3, 4, 5, 6, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    ['blockquote', 'code-block'],
-                    ['link', 'image', 'video', 'formula'],
-                    [{ list: 'ordered'}, { list: 'bullet' }, { list: 'check' }],
-                    [{ script: 'sub'}, { script: 'super' }],
-                    [{ direction: 'rtl' }],
-                    [{ color: [] }, { background: [] }],
-                    [{ font: [] }],
-                    [{ 'align': [] }],
-                    [{ indent: '-1' }, { indent: '+1' }],
-                    ['table-better'],
-                    ['clean', 'html-edit'],
-                ],
-                handlers: {
-                    image: this.imageHandler
-                }
-            };
-        }
-
         if (!modules.hasOwnProperty('history')) {
             modules.history = {
                 delay: 700,
@@ -349,7 +381,11 @@ pimcore.bundle.quill.editor = Class.create({
 
         if (!modules.hasOwnProperty('clipboard')) {
             modules.clipboard = {
-                matchVisual: false
+                matchers: [
+                    ['IMG', (node, delta) => {
+                        return delta.compose(new Delta().retain(delta.length(), node.style ?? {}));
+                    }]
+                ]
             };
         }
 
